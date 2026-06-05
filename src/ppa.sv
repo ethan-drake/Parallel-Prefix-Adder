@@ -20,20 +20,24 @@ module adder #(parameter WIDTH=4) (
   
   genvar i,j;
   generate
-    for (i=1; i < WIDTH; i++) begin: level
-    	//association
-      //for (j=1; j < WIDTH; j++) begin: pg_node
-        //p[i][j]= p[i-1][j] & p[i-1][j-(1<<(i-1))];
-        //g[i][j]= g[i-1][j] | (p[i-1][j] &  g[i-1][j-(1<<(i-1))]) ;
-          assign p[i]= p[i-1] & (p[i-1]<<(1<<(i-1)));
-		  assign g[i]= g[i-1] | (p[i-1] & (g[i-1]<<(1<<(i-1))));
-      //end
+    for (i=1; i <= LEVELS; i++) begin: level
+		// S is the shift amount for this specific level (1, 2, 4, 8...)
+      localparam S = 1 << (i-1); 
+      
+      // Calculate the upper bits
+      assign p[i][WIDTH-1:S] = p[i-1][WIDTH-1:S] & p[i-1][WIDTH-1-S:0];
+      assign g[i][WIDTH-1:S] = g[i-1][WIDTH-1:S] | (p[i-1][WIDTH-1:S] & g[i-1][WIDTH-1-S:0]);
+      
+      // Pass through the lower bits
+      assign p[i][S-1:0]     = p[i-1][S-1:0];
+      assign g[i][S-1:0]     = g[i-1][S-1:0];
     end
   endgenerate
   
 
-  
-  assign result  = p ^ c[WIDTH-1:0];
+  assign c[WIDTH:1]=g[LEVELS][WIDTH-1:0];
+  assign result[0]  = p[0][0] ^ c[0];
+  assign result[WIDTH-1:1] = p[0][WIDTH-1:1]^g[LEVELS][WIDTH-2:0];
   assign cout = c[WIDTH];
 
   assign zero_f = (result==0);
