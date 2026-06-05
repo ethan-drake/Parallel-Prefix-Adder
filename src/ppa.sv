@@ -12,7 +12,10 @@ module adder #(parameter WIDTH=4) (
   localparam LEVELS = $clog2(WIDTH);
   logic [LEVELS:0][WIDTH-1:0] g, p;
   logic [WIDTH:0] c;
-  assign g[0] = srca & srcb;          
+
+  
+  assign g[0][0] = (srca[0] & srcb[0]) | (p[0][0] & cin);
+  assign g[0][WIDTH-1:1] = srca[WIDTH-1:1] & srcb[WIDTH-1:1];          
   assign p[0] = srca ^ srcb;          
   // generate
   // propagate
